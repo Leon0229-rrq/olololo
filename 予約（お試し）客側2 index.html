@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>じゃがバター順番待ち</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'M PLUS Rounded 1c', sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #f7f2eb; 
+            color: #4a4a4a; 
+            line-height: 1.6; 
+        }
+        .container { 
+            max-width: 600px; 
+            margin: auto; 
+            background: #fff; 
+            padding: 30px; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
+            text-align: center; 
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .header img {
+            width: 50px;
+            height: 50px;
+        }
+        h1 { 
+            color: #925828; 
+            margin: 0;
+            font-size: 2.2em;
+        }
+        p { 
+            color: #888; 
+            margin-bottom: 30px; 
+            font-size: 1.1em;
+        }
+        label { 
+            display: block; 
+            margin-bottom: 10px; 
+            font-weight: 700; 
+            color: #6a6a6a; 
+            font-size: 1.1em;
+        }
+        select { 
+            width: 80%; 
+            padding: 12px; 
+            margin-bottom: 30px; 
+            border: 1px solid #e0e0e0; 
+            border-radius: 10px; 
+            font-size: 1em; 
+            transition: all 0.3s ease; 
+            background-color: #fefefe;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
+        }
+        select:focus { 
+            border-color: #ff914d; 
+            outline: none; 
+            box-shadow: 0 0 8px rgba(255,145,77,0.3);
+        }
+        .button { 
+            width: 80%; 
+            padding: 15px; 
+            border: none; 
+            border-radius: 10px; 
+            background-color: #ff914d; 
+            color: white; 
+            font-size: 1.2em; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            font-weight: 700; 
+            box-shadow: 0 4px 15px rgba(255,145,77,0.4);
+        }
+        .button:hover { 
+            background-color: #ff7f33; 
+            transform: translateY(-3px); 
+            box-shadow: 0 6px 20px rgba(255,145,77,0.5);
+        }
+        .button:active { 
+            transform: translateY(0); 
+            box-shadow: 0 2px 10px rgba(255,145,77,0.4);
+        }
+        .button.cancel-btn { 
+            background-color: #e76f51; 
+            margin-top: 15px; 
+            box-shadow: 0 4px 15px rgba(231,111,81,0.4);
+        }
+        .button.cancel-btn:hover { 
+            background-color: #d65535;
+        }
+        .button.reload-btn { 
+            background-color: #c9c9c9; 
+            margin-top: 15px;
+            box-shadow: 0 4px 15px rgba(201,201,201,0.4);
+        }
+        .button.reload-btn:hover { 
+            background-color: #adadad; 
+        }
+        .loading-text { 
+            color: #ff914d; 
+            margin-top: 20px; 
+            font-size: 1.1em; 
+            display: none; 
+        }
+        .reservation-info { 
+            margin-top: 35px; 
+            border-top: 2px solid #f0e6da; 
+            padding-top: 30px; 
+        }
+        .reservation-info h2 { 
+            color: #6a6a6a; 
+            margin-bottom: 25px; 
+        }
+        .info-item { 
+            font-size: 1.1em; 
+            margin-bottom: 15px; 
+            text-align: left; 
+            background-color: #fff8ee; 
+            padding: 20px; 
+            border-radius: 12px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid #f0e6da;
+        }
+        .info-item strong { 
+            color: #925828; 
+            font-weight: 700;
+        }
+        .status-message { 
+            font-size: 1.3em; 
+            color: #ff7f33; 
+            font-weight: 700; 
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <img src="https://em-content.zobj.net/source/microsoft-teams/337/potato_1f954.png" alt="じゃがいもアイコン">
+        <h1>3年3組 じゃがバター販売</h1>
+    </div>
+    <p>人数を選んで予約してください（最大3名まで）</p>
+    <div id="reservation-form">
+        <label for="people">予約人数：</label>
+        <select id="people">
+            <option value="1">1人</option>
+            <option value="2">2人</option>
+            <option value="3">3人</option>
+        </select>
+        <button id="reserve-btn" class="button">予約する</button>
+        <div id="loading-message" class="loading-text">予約処理中...</div>
+    </div>
+    <div id="reservation-info" class="reservation-info" style="display:none;">
+        <div class="status-message">予約が完了しました！</div>
+        <h2>あなたの予約情報</h2>
+        <div class="info-item"><strong>受付番号:</strong> <span id="my-reservation-number"></span></div>
+        <div class="info-item"><strong>現在の待ち組数:</strong> <span id="my-waiting-count"></span>組</div>
+        <div class="info-item"><strong>おおよその待ち時間:</strong> <span id="my-waiting-time"></span></div>
+        <button id="reload-btn" class="button reload-btn">🔄 更新</button>
+        <button class="button cancel-btn" id="cancel-my-reservation-btn">予約をキャンセルする</button>
+    </div>
+</div>
+<script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxecFiIt6FpzaG3-8mmYTMPWWU_WiEOr8nBg_3a2fTfOs_ZrB3McVKyjC3cwTs5knhr/exec'; // ここにGASのURLを貼り付けてください
+    
+    let myReservationNumber = null;
+    let myPeopleCount = null;
+    
+    window.onload = function() {
+        const storedNumber = localStorage.getItem('myReservationNumber');
+        const storedPeople = localStorage.getItem('myPeopleCount');
+        if (storedNumber && storedPeople) {
+            myReservationNumber = parseInt(storedNumber);
+            myPeopleCount = parseInt(storedPeople);
+            document.getElementById('reservation-form').style.display = 'none';
+            document.getElementById('reservation-info').style.display = 'block';
+            updateDisplay();
+        }
+        setInterval(updateDisplay, 5000);
+    };
+
+    document.getElementById('reserve-btn').addEventListener('click', function() {
+        const reserveBtn = this;
+        reserveBtn.disabled = true;
+        document.getElementById('loading-message').style.display = 'block';
+        const people = document.getElementById('people').value;
+        const formData = new FormData();
+        formData.append('action', 'reserve');
+        formData.append('people', people);
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                myReservationNumber = data.reservationNumber;
+                myPeopleCount = parseInt(people);
+                
+                localStorage.setItem('myReservationNumber', myReservationNumber);
+                localStorage.setItem('myPeopleCount', myPeopleCount);
+                
+                document.getElementById('reservation-form').style.display = 'none';
+                document.getElementById('reservation-info').style.display = 'block';
+                
+                updateDisplay();
+                
+            } else {
+                alert('予約に失敗しました。' + (data.error || ''));
+            }
+        })
+        .catch(error => {
+            console.error('予約エラー:', error);
+            alert('予約に失敗しました。もう一度お試しください。');
+        })
+        .finally(() => {
+            reserveBtn.disabled = false;
+            document.getElementById('loading-message').style.display = 'none';
+        });
+    });
+
+    document.getElementById('reload-btn').addEventListener('click', updateDisplay);
+
+    async function updateDisplay() {
+        if (!myReservationNumber) {
+            return;
+        }
+        try {
+            const reservationResponse = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: new URLSearchParams({ action: 'getReservations' }),
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            });
+            const reservationData = await reservationResponse.json();
+            
+            const waitTimeResponse = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: new URLSearchParams({ action: 'getBaseWaitTime' }),
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            });
+            const waitTimeData = await waitTimeResponse.json();
+            
+            if (reservationData.success && waitTimeData.success) {
+                const reservations = reservationData.reservations;
+                const myReservation = reservations.find(r => r.reservationNumber === myReservationNumber);
+                
+                if (myReservation) {
+                    const myIndex = reservations.findIndex(r => r.reservationNumber === myReservationNumber);
+                    const waitingReservationsCount = myIndex;
+                    
+                    let estimatedWaitTime = (waitingReservationsCount < 19) ? 15 : 30;
+                    const baseWaitTimeAdjustment = waitTimeData.waitTime;
+                    estimatedWaitTime += baseWaitTimeAdjustment;
+                    
+                    document.getElementById('my-reservation-number').textContent = myReservationNumber;
+                    document.getElementById('my-waiting-count').textContent = waitingReservationsCount;
+                    document.getElementById('my-waiting-time').textContent = `${Math.max(0, estimatedWaitTime)}分`;
+                } else {
+                    alert('あなたの予約は完了したか、キャンセルされました。');
+                    clearMyReservation();
+                }
+            }
+        } catch (error) {
+            console.error('表示更新エラー:', error);
+        }
+    }
+
+    document.getElementById('cancel-my-reservation-btn').addEventListener('click', function() {
+        if (!confirm('本当に予約をキャンセルしますか？')) {
+            return;
+        }
+        const formData = new FormData();
+        formData.append('action', 'cancelReservation');
+        formData.append('reservationNumber', myReservationNumber);
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: formData,
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('予約をキャンセルしました。');
+                clearMyReservation();
+            } else {
+                alert('キャンセルに失敗しました。' + (data.error || ''));
+            }
+        })
+        .catch(error => {
+            console.error('キャンセルエラー:', error);
+            alert('キャンセルに失敗しました。もう一度お試しください。');
+        });
+    });
+
+    function clearMyReservation() {
+        localStorage.removeItem('myReservationNumber');
+        localStorage.removeItem('myPeopleCount');
+        myReservationNumber = null;
+        myPeopleCount = null;
+        document.getElementById('reservation-form').style.display = 'block';
+        document.getElementById('reservation-info').style.display = 'none';
+    }
+</script>
+</body>
+</html>
